@@ -1,0 +1,99 @@
+#!/bin/bash
+
+#Move files common to all devices from tmp folder to filesystem location
+#cp -rf /tmp/greyd00r/common/* /
+
+
+#Make a function so we don't have to do the check to see if the file even exists each time we unload a daemon below. Could in theory even shorten the file paths used by putting them here but I was too lazy to do that.
+unloadDaemon(){
+	daemonName=$(echo "$1" | sed 's,/System/Library/LaunchDaemons/,,' | sed 's,.plist,,');
+	if [[ -f $1 ]];
+		then echo "Unloading $daemonName"; launchctl unload -w $1 2>/dev/null;
+	fi
+}
+
+#Maybe patched install code? Hope this works and doesn't screw everything up...
+find /tmp/greyd00r/common/ | while read newFile; do
+	installFile=$(echo "$newFile" | sed 's,/tmp/greyd00r/common,,');
+	#echo "installFile is $installFile";
+
+	#Stage 1. See if the object is a folder, and if it is, see if it exists on the file system.
+	if [[ -d "$newFile" ]];
+		then
+			#Stage 1a. See if the folder exists on the file system, and if it doesn't, just copy the whole folder over.
+			if [[ ! -d "$installFile" ]];
+				then cp -rf "$newFile" "$installFile";
+			fi
+	#Stage 2. Is the current object a file rather than a folder?
+	elif [[ -f "$newFile" ]];
+		then
+			#Stage 2a. Check if the file actually exists on the file system first. If it does, then remove the orignal before copying the new one into place.
+			if [[ -f "$installFile" ]];
+				then 
+					rm "$installFile";
+			fi
+
+			cp -rf "$newFile" "$installFile";
+	else
+		echo "Unhandled error. No clue how this happened. Maybe a symlink?";
+	fi
+done;
+
+#Remove all the temporary files
+rm -rf /tmp/greyd00r
+
+#Set permission for IPA patch
+chmod 777 /usr/bin/patchsync
+chmod 777 /usr/libexec/patchsync.dylib
+chmod 777 /usr/bin/ldone
+chmod 777 /usr/bin/clutch
+chmod 777 /var/lib/clutch/overdrive.dylib
+chmod 777 /etc/clutch.conf
+/usr/bin/patchsync /usr/libexec/installd
+ldone /usr/libexec/installd -s
+cp /usr/libexec/installd /usr/libexec/installd.new
+rm /usr/libexec/installd
+mv /usr/libexec/installd.new /usr/libexec/installd
+
+#Remove unused daemons to speed up the system
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.appsupport.cplogd.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.aslmanager.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.crash_mover.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.CrashHousekeeping.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.DumpBasebandCrash.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.DumpPanic.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.marcoagent.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.mobile.softwareupdated.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.OTACrashCopier.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.OTATaskingAgent.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.powerlog.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.ReportCrash.DirectoryService.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.ReportCrash.Jetsam.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.ReportCrash.SafetyNet.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.ReportCrash.SimulateCrash.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.ReportCrash.StackShot.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.ReportCrash.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.softwareupdateservicesd.plist
+#unloadDaemon  /System/Library/LaunchDaemons/com.apple.syslogd.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.mobile.profile_janitor.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.VoiceOverTouch.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.daily.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.datamigrator.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.MobileInternetSharing.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.AddressBook.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.dataaccess.dataaccessd.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.AdminLite.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.gmmd.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.wapic.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.storage_mounter.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.voiced
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.scrod.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.mobile.obliteration.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.SCHelper-embedded.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.assistivetouchd.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.sharktrace.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.SpringBoard.SetupHelper.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.certui.relay.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.mDNSResponderHelper.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.apple.vibrationmanagerd.plist
+unloadDaemon  /System/Library/LaunchDaemons/com.webinspectord.plist

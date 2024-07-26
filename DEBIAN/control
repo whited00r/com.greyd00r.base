@@ -1,0 +1,11 @@
+Package: com.greyd00r.base
+Name: Greyd00r Base
+Depends: 
+Architecture: iphoneos-arm
+Description: Base File and Configurations
+Maintainer: Greyd00r
+Author: mattewre
+Section: System
+Tag: role::hacker
+Version: 0.0.1-1
+Installed-Size: 401
